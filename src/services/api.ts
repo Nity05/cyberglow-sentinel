@@ -1,6 +1,7 @@
 
 import { toast } from '@/hooks/use-toast';
 import { ScanResult } from '@/contexts/ScanHistoryContext';
+import { supabase } from '@/integrations/supabase/client';
 
 // Update with your FastAPI backend URL
 const API_URL = 'http://localhost:8000';
@@ -32,17 +33,17 @@ const handleResponse = async (response: Response) => {
   return response.json();
 };
 
-// Authentication API calls
+// Authentication API calls (these now use Supabase)
 export const apiAuth = {
   login: async (credentials: AuthCredentials) => {
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials),
-        credentials: 'include',
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password
       });
-      return handleResponse(response);
+      
+      if (error) throw error;
+      return data;
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -51,13 +52,18 @@ export const apiAuth = {
 
   register: async (credentials: RegisterCredentials) => {
     try {
-      const response = await fetch(`${API_URL}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials),
-        credentials: 'include',
+      const { data, error } = await supabase.auth.signUp({
+        email: credentials.email,
+        password: credentials.password,
+        options: {
+          data: {
+            name: credentials.name
+          }
+        }
       });
-      return handleResponse(response);
+      
+      if (error) throw error;
+      return data;
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
@@ -66,11 +72,9 @@ export const apiAuth = {
 
   logout: async () => {
     try {
-      const response = await fetch(`${API_URL}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-      return handleResponse(response);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      return { success: true };
     } catch (error) {
       console.error('Logout error:', error);
       throw error;
@@ -79,10 +83,8 @@ export const apiAuth = {
 
   getCurrentUser: async () => {
     try {
-      const response = await fetch(`${API_URL}/auth/me`, {
-        credentials: 'include',
-      });
-      return handleResponse(response);
+      const { data } = await supabase.auth.getUser();
+      return data.user;
     } catch (error) {
       console.error('Get current user error:', error);
       return null;
@@ -90,7 +92,7 @@ export const apiAuth = {
   },
 };
 
-// Scanner API calls
+// Scanner API calls (still use FastAPI for scanning)
 export const apiScanner = {
   scanFile: async (scanRequest: ScanRequest): Promise<ScanResult> => {
     try {
@@ -104,13 +106,35 @@ export const apiScanner = {
         formData.append('system_scan', 'true');
       }
       
+      // Get the session token for authentication with FastAPI
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const response = await fetch(`${API_URL}/scan`, {
         method: 'POST',
         body: formData,
-        credentials: 'include',
+        headers: {
+          // Pass the auth token to FastAPI
+          'Authorization': `Bearer ${session?.access_token || ''}`
+        }
       });
       
-      return handleResponse(response);
+      const scanData = await handleResponse(response);
+      
+      // Also save to supabase
+      if (session?.user) {
+        await supabase.from('scan_history').insert({
+          user_id: session.user.id,
+          file_name: scanData.fileName,
+          scan_type: scanRequest.isSystemScan ? 'system' : 'file',
+          threat_percentage: scanData.mlPrediction,
+          result: {
+            fileSize: scanData.fileSize,
+            filePath: scanData.filePath
+          }
+        });
+      }
+      
+      return scanData;
     } catch (error) {
       console.error('File scan error:', error);
       throw error;
@@ -119,13 +143,34 @@ export const apiScanner = {
   
   getScanHistory: async (): Promise<ScanResult[]> => {
     try {
-      const response = await fetch(`${API_URL}/scan/history`, {
-        credentials: 'include',
-      });
-      return handleResponse(response);
+      const { data, error } = await supabase
+        .from('scan_history')
+        .select('*')
+        .order('scanned_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Map data to ScanResult format
+      return data.map(item => ({
+        id: item.id,
+        fileName: item.file_name,
+        fileSize: item.result?.fileSize || 'Unknown',
+        scanDate: new Date(item.scanned_at),
+        threatLevel: getThreatLevel(item.threat_percentage),
+        mlPrediction: item.threat_percentage,
+        filePath: item.result?.filePath
+      }));
     } catch (error) {
       console.error('Get scan history error:', error);
       throw error;
     }
   },
 };
+
+// Helper function to determine threat level
+function getThreatLevel(percentage?: number): 'Safe' | 'Suspicious' | 'Critical' {
+  if (percentage === undefined) return 'Safe';
+  if (percentage < 30) return 'Safe';
+  if (percentage < 70) return 'Suspicious';
+  return 'Critical';
+}
