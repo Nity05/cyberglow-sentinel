@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { apiAuth } from '@/services/api';
 
 interface User {
   id: string;
@@ -22,39 +23,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Check if user is already authenticated
   useEffect(() => {
-    // Check for saved user in localStorage
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
+    const checkAuth = async () => {
+      try {
+        setIsLoading(true);
+        const userData = await apiAuth.getCurrentUser();
+        if (userData) {
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const userData = await apiAuth.login({ email, password });
       
-      // Mock validation (in a real app, this would be an API request)
-      if (email && password) {
-        const mockUser = {
-          id: `user_${Math.random().toString(36).substr(2, 9)}`,
-          email,
-          name: email.split('@')[0]
-        };
-        
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        setUser(mockUser);
-        toast({
-          title: "Logged in successfully",
-          description: `Welcome back, ${mockUser.name}!`,
-        });
-        return true;
-      } else {
-        throw new Error('Invalid credentials');
-      }
+      setUser(userData);
+      toast({
+        title: "Logged in successfully",
+        description: `Welcome back, ${userData.name}!`,
+      });
+      return true;
     } catch (error) {
       toast({
         title: "Login failed",
@@ -70,26 +68,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (name: string, email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const userData = await apiAuth.register({ name, email, password });
       
-      if (name && email && password) {
-        const mockUser = {
-          id: `user_${Math.random().toString(36).substr(2, 9)}`,
-          email,
-          name
-        };
-        
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        setUser(mockUser);
-        toast({
-          title: "Account created",
-          description: `Welcome, ${name}!`,
-        });
-        return true;
-      } else {
-        throw new Error('Please fill all required fields');
-      }
+      setUser(userData);
+      toast({
+        title: "Account created",
+        description: `Welcome, ${name}!`,
+      });
+      return true;
     } catch (error) {
       toast({
         title: "Signup failed",
@@ -102,13 +88,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully",
-    });
+  const logout = async () => {
+    try {
+      await apiAuth.logout();
+      setUser(null);
+      toast({
+        title: "Logged out",
+        description: "You have been logged out successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Logout failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

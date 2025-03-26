@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import { GlowCard } from '@/components/ui/glow-card';
@@ -7,6 +6,7 @@ import { Shield, Upload, FileSearch, X, AlertTriangle, CheckCircle, FileText, Lo
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useScanHistory } from '@/contexts/ScanHistoryContext';
+import { apiScanner, ScanRequest } from '@/services/api';
 
 type ThreatLevel = 'Safe' | 'Suspicious' | 'Critical';
 
@@ -16,6 +16,7 @@ interface ScanningResult {
   threatLevel: ThreatLevel;
   detailsPath?: string;
   filePath?: string;
+  mlPrediction?: number;
 }
 
 const Scanner = () => {
@@ -27,7 +28,7 @@ const Scanner = () => {
   const [scanningSystem, setScanningSystem] = useState(false);
   const [systemScanProgress, setSystemScanProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { addScanResult } = useScanHistory();
+  const { addScanResult, refreshHistory } = useScanHistory();
 
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -86,53 +87,47 @@ const Scanner = () => {
     }
   };
 
-  const simulateScan = () => {
-    return new Promise<ScanningResult>((resolve) => {
-      setIsScanning(true);
-      setScanProgress(0);
-      
-      // Threat levels for simulation
-      const threatLevels: ThreatLevel[] = ['Safe', 'Suspicious', 'Critical'];
-      // Randomly select one, with safe having higher probability
-      const randomIndex = Math.random() < 0.6 ? 0 : Math.random() < 0.8 ? 1 : 2;
-      const threatLevel = threatLevels[randomIndex];
-      
-      // Simulate a scan progress
-      const interval = setInterval(() => {
-        setScanProgress(prev => {
-          const newProgress = prev + Math.random() * 10;
-          if (newProgress >= 100) {
-            clearInterval(interval);
-            
-            setTimeout(() => {
-              setIsScanning(false);
-              resolve({
-                fileName: file!.name,
-                fileSize: formatFileSize(file!.size),
-                threatLevel,
-                filePath: '/uploads/' + file!.name
-              });
-            }, 500);
-            
-            return 100;
-          }
-          return newProgress;
-        });
-      }, 200);
-    });
+  const simulateScanProgress = (callback: (progress: number) => void) => {
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 10;
+      if (progress >= 100) {
+        clearInterval(interval);
+        callback(100);
+      } else {
+        callback(progress);
+      }
+    }, 200);
+    
+    return interval;
   };
 
   const handleScanFile = async () => {
     if (!file) return;
     
     try {
-      const result = await simulateScan();
-      setScanResult(result);
+      setIsScanning(true);
+      setScanProgress(0);
       
-      // Add to scan history
-      addScanResult(result);
+      const progressInterval = simulateScanProgress(setScanProgress);
       
-      // Show toast based on threat level
+      const scanRequest: ScanRequest = {
+        file: file
+      };
+      
+      const result = await apiScanner.scanFile(scanRequest);
+      
+      clearInterval(progressInterval);
+      setScanProgress(100);
+      
+      setScanResult({
+        fileName: result.fileName,
+        fileSize: result.fileSize,
+        threatLevel: result.threatLevel,
+        filePath: result.filePath,
+        mlPrediction: result.mlPrediction
+      });
+      
       if (result.threatLevel === 'Safe') {
         toast({
           title: "Scan Complete: No Threats Detected",
@@ -142,7 +137,7 @@ const Scanner = () => {
         toast({
           title: "Scan Complete: Suspicious Content",
           description: "Potential security risks detected. Review recommended.",
-          variant: "warning"
+          variant: "destructive" 
         });
       } else {
         toast({
@@ -151,60 +146,58 @@ const Scanner = () => {
           variant: "destructive"
         });
       }
+      
+      refreshHistory();
     } catch (error) {
       toast({
         title: "Scan Failed",
-        description: "An error occurred during scanning. Please try again.",
+        description: error instanceof Error ? error.message : "An error occurred during scanning",
         variant: "destructive"
       });
+    } finally {
       setIsScanning(false);
     }
   };
 
-  const simulateSystemScan = () => {
-    setScanningSystem(true);
-    setSystemScanProgress(0);
-    
-    const interval = setInterval(() => {
-      setSystemScanProgress(prev => {
-        const newProgress = prev + (Math.random() * 5);
-        if (newProgress >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setScanningSystem(false);
-            
-            // Randomly decide how many threats to find (0-3)
-            const threatCount = Math.floor(Math.random() * 4);
-            
-            if (threatCount === 0) {
-              addScanResult({
-                fileName: "System Scan",
-                fileSize: "Multiple Files",
-                threatLevel: "Safe"
-              });
-              toast({
-                title: "System Scan Complete",
-                description: "No threats detected. Your system is secure.",
-              });
-            } else {
-              const threatLevel: ThreatLevel = threatCount > 1 ? 'Critical' : 'Suspicious';
-              addScanResult({
-                fileName: "System Scan",
-                fileSize: "Multiple Files",
-                threatLevel
-              });
-              toast({
-                title: `System Scan Complete: ${threatCount} ${threatCount === 1 ? 'threat' : 'threats'} found`,
-                description: `${threatLevel} security issues detected. Check scan history for details.`,
-                variant: threatLevel === 'Critical' ? "destructive" : "warning"
-              });
-            }
-          }, 500);
-          return 100;
-        }
-        return newProgress;
+  const simulateSystemScan = async () => {
+    try {
+      setScanningSystem(true);
+      setSystemScanProgress(0);
+      
+      const progressInterval = simulateScanProgress(setSystemScanProgress);
+      
+      const scanRequest: ScanRequest = {
+        isSystemScan: true
+      };
+      
+      const result = await apiScanner.scanFile(scanRequest);
+      
+      clearInterval(progressInterval);
+      setSystemScanProgress(100);
+      
+      if (result.threatLevel === 'Safe') {
+        toast({
+          title: "System Scan Complete",
+          description: "No threats detected. Your system is secure.",
+        });
+      } else {
+        toast({
+          title: `System Scan Complete: Threats found!`,
+          description: `${result.threatLevel} security issues detected. Check scan history for details.`,
+          variant: "destructive"
+        });
+      }
+      
+      refreshHistory();
+    } catch (error) {
+      toast({
+        title: "System Scan Failed",
+        description: error instanceof Error ? error.message : "An error occurred during scanning",
+        variant: "destructive"
       });
-    }, 200);
+    } finally {
+      setScanningSystem(false);
+    }
   };
 
   const getThreatLevelColor = (level: ThreatLevel) => {

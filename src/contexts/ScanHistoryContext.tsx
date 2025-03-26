@@ -1,6 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { apiScanner } from '@/services/api';
+import { toast } from '@/hooks/use-toast';
 
 export interface ScanResult {
   id: string;
@@ -10,12 +12,15 @@ export interface ScanResult {
   threatLevel: 'Safe' | 'Suspicious' | 'Critical';
   detailsPath?: string;
   filePath?: string;
+  mlPrediction?: number; // Percentage from ML model
 }
 
 interface ScanHistoryContextType {
   scanHistory: ScanResult[];
   addScanResult: (result: Omit<ScanResult, 'id' | 'scanDate'>) => void;
   clearHistory: () => void;
+  refreshHistory: () => Promise<void>;
+  isLoading: boolean;
 }
 
 const ScanHistoryContext = createContext<ScanHistoryContextType | undefined>(undefined);
@@ -23,32 +28,42 @@ const ScanHistoryContext = createContext<ScanHistoryContextType | undefined>(und
 export const ScanHistoryProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const { user } = useAuth();
   const [scanHistory, setScanHistory] = useState<ScanResult[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Load scan history from localStorage when user changes
+  // Load scan history when user changes
   useEffect(() => {
     if (user) {
-      const savedHistory = localStorage.getItem(`scanHistory_${user.id}`);
-      if (savedHistory) {
-        // Parse dates correctly
-        const parsedHistory = JSON.parse(savedHistory, (key, value) => {
-          if (key === 'scanDate') return new Date(value);
-          return value;
-        });
-        setScanHistory(parsedHistory);
-      } else {
-        setScanHistory([]);
-      }
+      refreshHistory();
     } else {
       setScanHistory([]);
     }
   }, [user]);
 
-  // Save to localStorage whenever scan history changes
-  useEffect(() => {
-    if (user && scanHistory.length > 0) {
-      localStorage.setItem(`scanHistory_${user.id}`, JSON.stringify(scanHistory));
+  const refreshHistory = async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      const history = await apiScanner.getScanHistory();
+      
+      // Parse dates correctly
+      const formattedHistory = history.map(item => ({
+        ...item,
+        scanDate: new Date(item.scanDate)
+      }));
+      
+      setScanHistory(formattedHistory);
+    } catch (error) {
+      console.error('Failed to load scan history:', error);
+      toast({
+        title: "Failed to load scan history",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [scanHistory, user]);
+  };
 
   const addScanResult = (result: Omit<ScanResult, 'id' | 'scanDate'>) => {
     const newScan: ScanResult = {
@@ -60,15 +75,24 @@ export const ScanHistoryProvider: React.FC<{children: React.ReactNode}> = ({ chi
     setScanHistory(prev => [newScan, ...prev]);
   };
 
-  const clearHistory = () => {
-    if (user) {
-      localStorage.removeItem(`scanHistory_${user.id}`);
-      setScanHistory([]);
-    }
+  const clearHistory = async () => {
+    // In a real app, you would call an API endpoint to clear the history
+    // For now, we'll just clear the local state
+    setScanHistory([]);
+    toast({
+      title: "History cleared",
+      description: "Your scan history has been cleared",
+    });
   };
 
   return (
-    <ScanHistoryContext.Provider value={{ scanHistory, addScanResult, clearHistory }}>
+    <ScanHistoryContext.Provider value={{ 
+      scanHistory, 
+      addScanResult, 
+      clearHistory, 
+      refreshHistory,
+      isLoading 
+    }}>
       {children}
     </ScanHistoryContext.Provider>
   );
