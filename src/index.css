@@ -120,6 +120,47 @@
     transform-origin: bottom right;
     animation: radar-beam 4s linear infinite;
   }
+
+  /* Custom scrollbar */
+  .cyber-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: theme(colors.cyber.primary) theme(colors.cyber.muted);
+  }
+
+  .cyber-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .cyber-scrollbar::-webkit-scrollbar-track {
+    background: theme(colors.cyber.muted);
+    border-radius: 10px;
+  }
+
+  .cyber-scrollbar::-webkit-scrollbar-thumb {
+    background: theme(colors.cyber.primary);
+    border-radius: 10px;
+  }
+
+  .cyber-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: theme(colors.cyber.secondary);
+  }
+
+  /* Scanner animation */
+  .scan-animation {
+    @apply absolute inset-0 pointer-events-none;
+    background: linear-gradient(to bottom, 
+      rgba(56, 189, 248, 0) 0%, 
+      rgba(56, 189, 248, 0.1) 50%, 
+      rgba(56, 189, 248, 0) 100%
+    );
+    background-size: 100% 20px;
+    animation: scan-animation 3s ease-in-out infinite;
+  }
+
+  @keyframes scan-animation {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
 }
 
 @layer components {
@@ -159,4 +200,18 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Animated gradient background */
+  .animated-gradient {
+    background: linear-gradient(-45deg, #38BDF8, #0EA5E9, #00FFD1, #38BDF8);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+
+  @keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
 }
+

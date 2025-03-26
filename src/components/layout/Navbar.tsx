@@ -1,13 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Shield, Menu, X, ShieldAlert, LogIn } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Shield, Menu, X, ShieldAlert, LogIn, History, FileSearch, Info } from 'lucide-react';
 import { ButtonGlow } from '../ui/button-glow';
 import { cn } from '@/lib/utils';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,11 +29,10 @@ const Navbar = () => {
   };
 
   const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Scanner', path: '/scanner' },
-    { name: 'Dashboard', path: '/dashboard' },
-    { name: 'History', path: '/history' },
-    { name: 'About', path: '/about' },
+    { name: 'Home', path: '/', icon: <Shield className="h-4 w-4" /> },
+    { name: 'Scanner', path: '/scanner', icon: <FileSearch className="h-4 w-4" /> },
+    { name: 'History', path: '/history', icon: <History className="h-4 w-4" /> },
+    { name: 'About', path: '/about', icon: <Info className="h-4 w-4" /> },
   ];
 
   return (
@@ -60,24 +60,35 @@ const Navbar = () => {
             <Link
               key={link.name}
               to={link.path}
-              className="text-cyber-foreground hover:text-cyber-primary transition-colors relative group py-2"
+              className={cn(
+                "text-cyber-foreground hover:text-cyber-primary transition-colors relative group py-2 flex items-center",
+                location.pathname === link.path && "text-cyber-primary"
+              )}
             >
-              {link.name}
-              <span className="absolute inset-x-0 bottom-0 h-[1px] bg-cyber-primary transform scale-x-0 group-hover:scale-x-100 transition-transform origin-center"></span>
+              {link.icon}
+              <span className="ml-2">{link.name}</span>
+              <span className={cn(
+                "absolute inset-x-0 bottom-0 h-[1px] bg-cyber-primary transform scale-x-0 transition-transform origin-center",
+                location.pathname === link.path ? "scale-x-100" : "group-hover:scale-x-100"
+              )}></span>
             </Link>
           ))}
         </div>
 
         {/* Right side buttons */}
         <div className="hidden md:flex items-center space-x-4">
-          <ButtonGlow variant="outline" size="sm">
-            <LogIn className="mr-2 h-4 w-4" />
-            Log In
-          </ButtonGlow>
-          <ButtonGlow animation="pulse">
-            <Shield className="mr-2 h-4 w-4" />
-            Scan Now
-          </ButtonGlow>
+          <Link to="/login">
+            <ButtonGlow variant="outline" size="sm">
+              <LogIn className="mr-2 h-4 w-4" />
+              Log In
+            </ButtonGlow>
+          </Link>
+          <Link to="/scanner">
+            <ButtonGlow animation="pulse">
+              <Shield className="mr-2 h-4 w-4" />
+              Scan Now
+            </ButtonGlow>
+          </Link>
         </div>
 
         {/* Mobile menu button */}
@@ -101,21 +112,29 @@ const Navbar = () => {
               <Link
                 key={link.name}
                 to={link.path}
-                className="text-cyber-foreground hover:text-cyber-primary transition-colors py-2 border-b border-cyber-border/30"
+                className={cn(
+                  "text-cyber-foreground hover:text-cyber-primary transition-colors py-2 border-b border-cyber-border/30 flex items-center",
+                  location.pathname === link.path && "text-cyber-primary"
+                )}
                 onClick={() => setMobileMenuOpen(false)}
               >
-                {link.name}
+                {link.icon}
+                <span className="ml-2">{link.name}</span>
               </Link>
             ))}
             <div className="pt-2 flex flex-col space-y-2">
-              <ButtonGlow variant="outline" className="w-full justify-center">
-                <LogIn className="mr-2 h-4 w-4" />
-                Log In
-              </ButtonGlow>
-              <ButtonGlow className="w-full justify-center" animation="pulse">
-                <Shield className="mr-2 h-4 w-4" />
-                Scan Now
-              </ButtonGlow>
+              <Link to="/login" className="w-full">
+                <ButtonGlow variant="outline" className="w-full justify-center">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Log In
+                </ButtonGlow>
+              </Link>
+              <Link to="/scanner" className="w-full">
+                <ButtonGlow className="w-full justify-center" animation="pulse">
+                  <Shield className="mr-2 h-4 w-4" />
+                  Scan Now
+                </ButtonGlow>
+              </Link>
             </div>
           </div>
         </div>
