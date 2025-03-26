@@ -1,16 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Shield, Menu, X, ShieldAlert, LogIn, History, FileSearch, Info, LogOut, User } from 'lucide-react';
+import { Shield, Menu, X, ShieldAlert, LogIn, History, FileSearch, Info } from 'lucide-react';
 import { ButtonGlow } from '../ui/button-glow';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { user, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -79,26 +77,13 @@ const Navbar = () => {
 
         {/* Right side buttons */}
         <div className="hidden md:flex items-center space-x-4">
-          {user ? (
-            <>
-              <div className="flex items-center space-x-2 mr-2 text-cyber-foreground">
-                <User className="h-4 w-4" />
-                <span className="text-sm">{user.name}</span>
-              </div>
-              <ButtonGlow variant="outline" size="sm" onClick={logout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Log Out
-              </ButtonGlow>
-            </>
-          ) : (
-            <Link to="/login">
-              <ButtonGlow variant="outline" size="sm">
-                <LogIn className="mr-2 h-4 w-4" />
-                Log In
-              </ButtonGlow>
-            </Link>
-          )}
-          <Link to={user ? "/scanner" : "/login"}>
+          <Link to="/login">
+            <ButtonGlow variant="outline" size="sm">
+              <LogIn className="mr-2 h-4 w-4" />
+              Log In
+            </ButtonGlow>
+          </Link>
+          <Link to="/scanner">
             <ButtonGlow animation="pulse">
               <Shield className="mr-2 h-4 w-4" />
               Scan Now
@@ -138,26 +123,13 @@ const Navbar = () => {
               </Link>
             ))}
             <div className="pt-2 flex flex-col space-y-2">
-              {user ? (
-                <>
-                  <div className="flex items-center space-x-2 py-2 text-cyber-foreground">
-                    <User className="h-4 w-4" />
-                    <span>{user.name}</span>
-                  </div>
-                  <ButtonGlow variant="outline" className="w-full justify-center" onClick={logout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log Out
-                  </ButtonGlow>
-                </>
-              ) : (
-                <Link to="/login" className="w-full">
-                  <ButtonGlow variant="outline" className="w-full justify-center">
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Log In
-                  </ButtonGlow>
-                </Link>
-              )}
-              <Link to={user ? "/scanner" : "/login"} className="w-full">
+              <Link to="/login" className="w-full">
+                <ButtonGlow variant="outline" className="w-full justify-center">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Log In
+                </ButtonGlow>
+              </Link>
+              <Link to="/scanner" className="w-full">
                 <ButtonGlow className="w-full justify-center" animation="pulse">
                   <Shield className="mr-2 h-4 w-4" />
                   Scan Now
