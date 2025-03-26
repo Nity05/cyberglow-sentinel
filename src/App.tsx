@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ScanHistoryProvider } from "./contexts/ScanHistoryContext";
+import CorsConfig from "./components/CorsConfig";
 import Index from "./pages/Index";
 import Scanner from "./pages/Scanner";
 import History from "./pages/History";
@@ -53,6 +54,7 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <ScanHistoryProvider>
+          <CorsConfig />
           <div className="min-h-screen bg-cyber-background">
             <Toaster />
             <Sonner />
