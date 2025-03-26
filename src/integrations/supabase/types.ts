@@ -9,54 +9,7 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      profiles: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id: string
-          name?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string | null
-        }
-        Relationships: []
-      }
-      scan_history: {
-        Row: {
-          file_name: string | null
-          id: string
-          result: Json | null
-          scan_type: string | null
-          scanned_at: string | null
-          threat_percentage: number | null
-          user_id: string
-        }
-        Insert: {
-          file_name?: string | null
-          id?: string
-          result?: Json | null
-          scan_type?: string | null
-          scanned_at?: string | null
-          threat_percentage?: number | null
-          user_id: string
-        }
-        Update: {
-          file_name?: string | null
-          id?: string
-          result?: Json | null
-          scan_type?: string | null
-          scanned_at?: string | null
-          threat_percentage?: number | null
-          user_id?: string
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
