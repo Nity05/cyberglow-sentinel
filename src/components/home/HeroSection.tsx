@@ -49,7 +49,7 @@ const HeroSection = () => {
             </div>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-              <span className="cyber-text-gradient">Cyber Glow</span> <br />
+              <span className="cyber-text-gradient">CyberGlow</span> <br />
              </h1>
             
             <div className="h-16">

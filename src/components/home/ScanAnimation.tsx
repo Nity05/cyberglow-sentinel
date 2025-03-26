@@ -1,7 +1,7 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
 import { ButtonGlow } from '../ui/button-glow';
-import { Shield, Search, Loader2, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { Shield, Search, Loader2, CheckCircle2, AlertTriangle, XCircle, Upload } from 'lucide-react';
 
 const scanSteps = [
   { name: 'Initializing scan engine', duration: 1500 },
@@ -12,116 +12,170 @@ const scanSteps = [
   { name: 'Finalizing scan results', duration: 1200 }
 ];
 
-const threatLevels = [
-  { level: 'Safe', count: 4, color: 'text-green-500', bg: 'bg-green-500/10', icon: CheckCircle2 },
-  { level: 'Suspicious', count: 1, color: 'text-yellow-500', bg: 'bg-yellow-500/10', icon: AlertTriangle },
-  { level: 'Critical', count: 0, color: 'text-red-500', bg: 'bg-red-500/10', icon: XCircle }
-];
-
-const ScanAnimation = () => {
+const MalwareScanner = () => {
   const [isScanning, setIsScanning] = useState(false);
+  const [scanComplete, setScanComplete] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [scanComplete, setScanComplete] = useState(false);
-  
-  const startScan = () => {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [scanResults, setScanResults] = useState(null);
+  const [threatLevels, setThreatLevels] = useState([
+    { level: 'Safe', count: 0, color: 'text-green-500', bg: 'bg-green-500/10', icon: CheckCircle2 },
+    { level: 'Suspicious', count: 0, color: 'text-yellow-500', bg: 'bg-yellow-500/10', icon: AlertTriangle },
+    { level: 'Critical', count: 0, color: 'text-red-500', bg: 'bg-red-500/10', icon: XCircle }
+  ]);
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    setSelectedFile(file);
+  };
+
+  const startScan = async () => {
+    if (!selectedFile) {
+      alert('Please select a file to scan');
+      return;
+    }
+
     setIsScanning(true);
     setCurrentStep(0);
     setProgress(0);
     setScanComplete(false);
-    
+    setScanResults(null);
+
     // Progress animation
     const totalDuration = scanSteps.reduce((acc, step) => acc + step.duration, 0);
     const interval = 30; // Update every 30ms
     let elapsed = 0;
-    
-    const timer = setInterval(() => {
-      elapsed += interval;
-      const newProgress = Math.min(100, (elapsed / totalDuration) * 100);
-      setProgress(newProgress);
-      
-      // Update current step
-      let stepDuration = 0;
-      for (let i = 0; i < scanSteps.length; i++) {
-        stepDuration += scanSteps[i].duration;
-        if (elapsed <= stepDuration) {
-          setCurrentStep(i);
-          break;
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const timer = setInterval(() => {
+        elapsed += interval;
+        const newProgress = Math.min(100, (elapsed / totalDuration) * 100);
+        setProgress(newProgress);
+        
+        // Update current step
+        let stepDuration = 0;
+        for (let i = 0; i < scanSteps.length; i++) {
+          stepDuration += scanSteps[i].duration;
+          if (elapsed <= stepDuration) {
+            setCurrentStep(i);
+            break;
+          }
         }
-      }
-      
-      if (newProgress >= 100) {
-        clearInterval(timer);
-        setTimeout(() => {
-          setScanComplete(true);
-        }, 500);
-      }
-    }, interval);
+        
+        if (newProgress >= 100) {
+          clearInterval(timer);
+          setTimeout(async () => {
+            try {
+              // Upload and scan file
+              const uploadResponse = await axios.post('/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+              });
+
+              const predictResponse = await axios.post('/predict', {
+                features: [] // You'll need to extract features from the uploaded file
+              });
+
+              setScanResults(predictResponse.data);
+              updateThreatLevels(predictResponse.data);
+              setScanComplete(true);
+            } catch (error) {
+              console.error('Scan error:', error);
+              setScanComplete(true);
+            }
+          }, 500);
+        }
+      }, interval);
+    } catch (error) {
+      console.error('Scan initialization error:', error);
+      setIsScanning(false);
+    }
   };
-  
+
+  const updateThreatLevels = (results) => {
+    const updatedThreats = [...threatLevels];
+    
+    if (results.is_malicious) {
+      if (results.confidence > 0.8) {
+        updatedThreats[2].count++; // Critical
+      } else {
+        updatedThreats[1].count++; // Suspicious
+      }
+    } else {
+      updatedThreats[0].count++; // Safe
+    }
+
+    setThreatLevels(updatedThreats);
+  };
+
+  const resetScan = () => {
+    setIsScanning(false);
+    setScanComplete(false);
+    setCurrentStep(0);
+    setProgress(0);
+    setScanResults(null);
+    setSelectedFile(null);
+    setThreatLevels([
+      { level: 'Safe', count: 0, color: 'text-green-500', bg: 'bg-green-500/10', icon: CheckCircle2 },
+      { level: 'Suspicious', count: 0, color: 'text-yellow-500', bg: 'bg-yellow-500/10', icon: AlertTriangle },
+      { level: 'Critical', count: 0, color: 'text-red-500', bg: 'bg-red-500/10', icon: XCircle }
+    ]);
+  };
+
   return (
     <section className="py-20 relative bg-cyber-muted overflow-hidden">
-      <div className="absolute inset-0 cyber-grid opacity-30 z-0"></div>
-      
       <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Experience <span className="cyber-text-gradient">Real-Time</span> Scanning
-          </h2>
-          <p className="text-cyber-foreground/70">
-            Our advanced scanning technology provides immediate threat detection and comprehensive system analysis to keep you protected.
-          </p>
-        </div>
-        
         <div className="max-w-4xl mx-auto bg-cyber-background rounded-xl border border-cyber-border p-6 relative overflow-hidden">
-          {/* Animated background */}
-          <div className="absolute inset-0 cyber-dots opacity-20 z-0"></div>
-          
-          <div className="relative z-10">
-            {/* Scan header */}
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center">
-                <div className="p-2 rounded-full bg-cyber-primary/10 mr-3">
-                  <Shield className="h-6 w-6 text-cyber-primary" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-cyber-foreground">System Scan</h3>
-                  <p className="text-sm text-cyber-foreground/70">
-                    {scanComplete 
-                      ? "Scan complete. System protected." 
-                      : isScanning 
-                        ? `${scanSteps[currentStep].name}...` 
-                        : "Ready to scan your system"
-                    }
-                  </p>
-                </div>
+          {/* File Upload */}
+          <div className="mb-6 flex items-center space-x-4">
+            <input 
+              type="file" 
+              id="file-upload" 
+              className="hidden" 
+              onChange={handleFileUpload}
+              disabled={isScanning}
+            />
+            <label 
+              htmlFor="file-upload" 
+              className={`flex-1 border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+                selectedFile 
+                  ? 'border-cyber-primary bg-cyber-primary/10' 
+                  : 'border-cyber-border hover:border-cyber-primary'
+              }`}
+            >
+              <div className="flex items-center justify-center">
+                <Upload className="mr-2 h-5 w-5 text-cyber-primary" />
+                <span className="text-sm">
+                  {selectedFile 
+                    ? `Selected: ${selectedFile.name}` 
+                    : 'Click to upload a file for scanning'}
+                </span>
               </div>
-              
-              <ButtonGlow
-                onClick={startScan}
-                disabled={isScanning && !scanComplete}
-                animation={isScanning && !scanComplete ? "pulse" : "none"}
-              >
-                {isScanning && !scanComplete ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Scanning...
-                  </>
-                ) : scanComplete ? (
-                  <>
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Scan Again
-                  </>
-                ) : (
-                  <>
-                    <Search className="mr-2 h-4 w-4" />
-                    Start Scan
-                  </>
-                )}
-              </ButtonGlow>
-            </div>
+            </label>
             
-            {/* Progress bar */}
+            <ButtonGlow
+              onClick={startScan}
+              disabled={!selectedFile || isScanning}
+            >
+              {isScanning ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Scanning...
+                </>
+              ) : (
+                <>
+                  <Search className="mr-2 h-4 w-4" />
+                  Start Scan
+                </>
+              )}
+            </ButtonGlow>
+          </div>
+
+          {/* Scan Progress */}
+          {isScanning && (
             <div className="mb-6">
               <div className="h-2 bg-cyber-muted rounded-full overflow-hidden">
                 <div 
@@ -134,10 +188,12 @@ const ScanAnimation = () => {
                 <span>{Math.round(progress)}%</span>
               </div>
             </div>
-            
-            {/* Scan animation area */}
+          )}
+
+          {/* Scan Steps */}
+          {isScanning && (
             <div className="grid md:grid-cols-2 gap-6 mb-6">
-              {/* Left side - Scan visualization */}
+              {/* Scan Visualization */}
               <div className="bg-cyber-muted/30 rounded-lg border border-cyber-border p-4 h-64 relative overflow-hidden">
                 {isScanning && !scanComplete && (
                   <div className="scan-line"></div>
@@ -166,7 +222,7 @@ const ScanAnimation = () => {
                 </div>
               </div>
               
-              {/* Right side - Scan details */}
+              {/* Scan Details */}
               <div className="bg-cyber-muted/30 rounded-lg border border-cyber-border p-4 h-64 flex flex-col">
                 <h4 className="text-sm font-medium text-cyber-foreground/80 mb-3">Scan Details</h4>
                 
@@ -223,41 +279,50 @@ const ScanAnimation = () => {
                 )}
               </div>
             </div>
-            
-            {/* System status */}
-            <div className={`rounded-lg border p-3 transition-all duration-500 ${
-              scanComplete 
-                ? 'border-green-500/30 bg-green-500/5' 
-                : 'border-cyber-border bg-cyber-muted/20'
-            }`}>
-              <div className="flex items-center">
-                {scanComplete ? (
-                  <div className="p-1 rounded-full bg-green-500/10 mr-2">
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  </div>
-                ) : (
-                  <div className="p-1 rounded-full bg-cyber-primary/10 mr-2">
-                    <Shield className="h-5 w-5 text-cyber-primary" />
-                  </div>
-                )}
-                <div>
-                  <h4 className={`text-sm font-medium ${scanComplete ? 'text-green-500' : 'text-cyber-primary'}`}>
-                    {scanComplete ? 'System Protected' : 'System Status'}
-                  </h4>
-                  <p className="text-xs text-cyber-foreground/70">
-                    {scanComplete 
-                      ? 'Your system is secure. 1 suspicious item quarantined.' 
-                      : 'Awaiting scan results...'
-                    }
-                  </p>
+          )}
+
+          {/* Scan Results */}
+          {scanComplete && scanResults && (
+            <div className="mt-6 p-4 bg-cyber-muted/30 rounded-lg border border-cyber-border">
+              <h4 className="text-lg font-semibold mb-4">Scan Results</h4>
+              <div className={`p-3 rounded-lg ${
+                scanResults.is_malicious 
+                  ? 'bg-red-500/10 border border-red-500/30' 
+                  : 'bg-green-500/10 border border-green-500/30'
+              }`}>
+                <div className="flex items-center mb-2">
+                  {scanResults.is_malicious ? (
+                    <XCircle className="mr-2 h-6 w-6 text-red-500" />
+                  ) : (
+                    <CheckCircle2 className="mr-2 h-6 w-6 text-green-500" />
+                  )}
+                  <span className={`font-medium ${
+                    scanResults.is_malicious ? 'text-red-500' : 'text-green-500'
+                  }`}>
+                    {scanResults.is_malicious ? 'Malicious File Detected' : 'File is Safe'}
+                  </span>
+                </div>
+                <div className="text-sm text-cyber-foreground/70">
+                  <p>Confidence: {(scanResults.confidence * 100).toFixed(2)}%</p>
+                  <p>Prediction: {scanResults.label}</p>
                 </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Reset Button */}
+          {scanComplete && (
+            <div className="mt-4 flex justify-end">
+              <ButtonGlow onClick={resetScan}>
+                <Search className="mr-2 h-4 w-4" />
+                Scan Another File
+              </ButtonGlow>
+            </div>
+          )}
         </div>
       </div>
     </section>
   );
 };
 
-export default ScanAnimation;
+export default MalwareScanner;
