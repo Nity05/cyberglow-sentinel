@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -52,44 +53,115 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
-				}
+        // Cyber theme colors
+        cyber: {
+          background: '#0F0F17',
+          foreground: '#F8FAFC',
+          muted: '#1A1A27',
+          primary: '#38BDF8',
+          secondary: '#00FFD1',
+          accent: '#0EA5E9',
+          destructive: '#FF3A5E',
+          border: '#2A2A3C',
+        }
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
 			},
+      boxShadow: {
+        neon: '0 0 5px theme(colors.cyber.primary), 0 0 20px rgba(56, 189, 248, 0.2)',
+        neonRed: '0 0 5px theme(colors.cyber.destructive), 0 0 20px rgba(255, 58, 94, 0.2)',
+        neonGreen: '0 0 5px theme(colors.cyber.secondary), 0 0 20px rgba(0, 255, 209, 0.2)',
+      },
 			keyframes: {
 				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
+					from: { height: '0' },
+					to: { height: 'var(--radix-accordion-content-height)' }
 				},
 				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
-				}
+					from: { height: 'var(--radix-accordion-content-height)' },
+					to: { height: '0' }
+				},
+        'pulse-neon': {
+          '0%, 100%': { 
+            opacity: '1',
+            boxShadow: '0 0 5px theme(colors.cyber.primary), 0 0 20px rgba(56, 189, 248, 0.3)'
+          },
+          '50%': { 
+            opacity: '0.8',
+            boxShadow: '0 0 10px theme(colors.cyber.primary), 0 0 30px rgba(56, 189, 248, 0.5)' 
+          },
+        },
+        'glow-line-horizontal': {
+          '0%': {
+            transform: 'translateX(-100%)',
+          },
+          '100%': {
+            transform: 'translateX(100%)',
+          },
+        },
+        'scan-line': {
+          '0%': {
+            transform: 'translateY(0%)',
+          },
+          '100%': {
+            transform: 'translateY(100%)',
+          },
+        },
+        'glitch': {
+          '0%, 100%': { transform: 'translate(0)' },
+          '20%': { transform: 'translate(-5px, 5px)' },
+          '40%': { transform: 'translate(-5px, -5px)' },
+          '60%': { transform: 'translate(5px, 5px)' },
+          '80%': { transform: 'translate(5px, -5px)' },
+        },
+        'float': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        'hue-rotate': {
+          '0%': { filter: 'hue-rotate(0deg)' },
+          '100%': { filter: 'hue-rotate(360deg)' },
+        },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'fade-out': {
+          '0%': { opacity: '1' },
+          '100%': { opacity: '0' },
+        },
+        'scale-up': {
+          '0%': { transform: 'scale(0.95)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        'radar-beam': {
+          '0%': { 
+            transform: 'rotate(0deg)',
+            opacity: '0',
+          },
+          '100%': { 
+            transform: 'rotate(360deg)',
+            opacity: '1',
+          },
+        },
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
-			}
+				'accordion-up': 'accordion-up 0.2s ease-out',
+        'pulse-neon': 'pulse-neon 2s infinite',
+        'glow-line-horizontal': 'glow-line-horizontal 2s ease infinite',
+        'scan-line': 'scan-line 2s ease-in-out infinite',
+        'glitch': 'glitch 0.5s ease infinite',
+        'float': 'float 3s ease-in-out infinite',
+        'hue-rotate': 'hue-rotate 10s linear infinite',
+        'fade-in': 'fade-in 0.5s ease-out',
+        'fade-out': 'fade-out 0.5s ease-out',
+        'scale-up': 'scale-up 0.3s ease-out',
+        'radar-beam': 'radar-beam 4s linear infinite',
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
