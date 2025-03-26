@@ -1,42 +1,25 @@
 
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Shield, Eye, EyeOff, Lock, Mail, Fingerprint, User, ArrowRight } from 'lucide-react';
 import { ButtonGlow } from '@/components/ui/button-glow';
 import { GlowCard } from '@/components/ui/glow-card';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
+  const [loginData, setLoginData] = useState({
     email: '',
     password: '',
-    name: '',
-    confirmPassword: ''
+    name: ''
   });
   const [step, setStep] = useState(1);
-  const { login, signup, user, isLoading } = useAuth();
-  const navigate = useNavigate();
-  
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      navigate('/scanner');
-    }
-  }, [user, navigate]);
   
   const toggleView = () => {
     setIsLogin(!isLogin);
     setStep(1);
-    setFormData({
-      email: '',
-      password: '',
-      name: '',
-      confirmPassword: ''
-    });
   };
   
   const toggleShowPassword = () => {
@@ -45,37 +28,31 @@ const Login = () => {
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setLoginData({
+      ...loginData,
       [name]: value
     });
   };
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (isLogin) {
-      const success = await login(formData.email, formData.password);
-      if (success) {
-        navigate('/scanner');
-      }
+      // Login logic would go here
+      toast({
+        title: "Login Attempt",
+        description: "This is a demo. No actual login will occur.",
+        variant: "default"
+      });
     } else if (step === 1) {
       setStep(2);
     } else {
-      // Check if passwords match
-      if (formData.password !== formData.confirmPassword) {
-        toast({
-          title: "Passwords don't match",
-          description: "Please make sure your passwords match.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      const success = await signup(formData.name, formData.email, formData.password);
-      if (success) {
-        navigate('/scanner');
-      }
+      // Sign up logic would go here
+      toast({
+        title: "Account Created",
+        description: "This is a demo. No actual account was created.",
+        variant: "default"
+      });
     }
   };
   
@@ -119,7 +96,7 @@ const Login = () => {
                     type="text"
                     name="name"
                     placeholder="Full Name"
-                    value={formData.name}
+                    value={loginData.name}
                     onChange={handleInputChange}
                     className="cyber-input w-full pl-10 pr-4 py-3 bg-cyber-background/50 border border-cyber-border rounded-lg focus:border-cyber-primary transition-colors"
                     required
@@ -135,7 +112,7 @@ const Login = () => {
                     type="email"
                     name="email"
                     placeholder="Email Address"
-                    value={formData.email}
+                    value={loginData.email}
                     onChange={handleInputChange}
                     className="cyber-input w-full pl-10 pr-4 py-3 bg-cyber-background/50 border border-cyber-border rounded-lg focus:border-cyber-primary transition-colors"
                     required
@@ -156,7 +133,7 @@ const Login = () => {
                       type="email"
                       name="email"
                       placeholder="Email Address"
-                      value={formData.email}
+                      value={loginData.email}
                       onChange={handleInputChange}
                       className="cyber-input w-full pl-10 pr-4 py-3 bg-cyber-background/50 border border-cyber-border rounded-lg focus:border-cyber-primary transition-colors"
                       required
@@ -173,7 +150,7 @@ const Login = () => {
                     type={showPassword ? "text" : "password"}
                     name="password"
                     placeholder="Password"
-                    value={formData.password}
+                    value={loginData.password}
                     onChange={handleInputChange}
                     className="cyber-input w-full pl-10 pr-12 py-3 bg-cyber-background/50 border border-cyber-border rounded-lg focus:border-cyber-primary transition-colors"
                     required
@@ -197,8 +174,6 @@ const Login = () => {
                       type={showPassword ? "text" : "password"}
                       name="confirmPassword"
                       placeholder="Confirm Password"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
                       className="cyber-input w-full pl-10 pr-4 py-3 bg-cyber-background/50 border border-cyber-border rounded-lg focus:border-cyber-primary transition-colors"
                       required
                     />
@@ -230,22 +205,9 @@ const Login = () => {
               type="submit"
               className="w-full py-3 flex items-center justify-center group"
               animation="pulse"
-              disabled={isLoading}
             >
-              {isLoading ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-cyber-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Processing...
-                </span>
-              ) : (
-                <>
-                  {isLogin ? 'Login to Dashboard' : step === 1 ? 'Continue' : 'Create Account'}
-                  <ArrowRight className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
+              {isLogin ? 'Login to Dashboard' : step === 1 ? 'Continue' : 'Create Account'}
+              <ArrowRight className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
             </ButtonGlow>
           </form>
           
