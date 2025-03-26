@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import HeroSection from '@/components/home/HeroSection';
 import FeatureSection from '@/components/home/FeatureSection';
@@ -7,8 +8,11 @@ import ScanAnimation from '@/components/home/ScanAnimation';
 import StatsSection from '@/components/home/StatsSection';
 import { Shield, ArrowRight } from 'lucide-react';
 import { ButtonGlow } from '@/components/ui/button-glow';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
+  const { user } = useAuth();
+  
   return (
     <div className="min-h-screen bg-cyber-background text-cyber-foreground">
       <Navbar />
@@ -38,14 +42,18 @@ const Index = () => {
                   </p>
                   
                   <div className="flex flex-wrap gap-4">
-                    <ButtonGlow animation="pulse" size="lg" className="group">
-                      <Shield className="mr-2 h-5 w-5" />
-                      Get Started
-                      <ArrowRight className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
-                    </ButtonGlow>
-                    <ButtonGlow variant="outline" size="lg">
-                      Learn More
-                    </ButtonGlow>
+                    <Link to={user ? "/scanner" : "/login"}>
+                      <ButtonGlow animation="pulse" size="lg" className="group">
+                        <Shield className="mr-2 h-5 w-5" />
+                        Get Started
+                        <ArrowRight className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
+                      </ButtonGlow>
+                    </Link>
+                    <Link to="/about">
+                      <ButtonGlow variant="outline" size="lg">
+                        Learn More
+                      </ButtonGlow>
+                    </Link>
                   </div>
                 </div>
                 
