@@ -53,7 +53,7 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-        // Cyber theme colors
+        // Cyber theme colors - original
         cyber: {
           background: '#0F0F17',
           foreground: '#F8FAFC',
@@ -63,6 +63,18 @@ export default {
           accent: '#0EA5E9',
           destructive: '#FF3A5E',
           border: '#2A2A3C',
+          // Additional custom colors
+          dark: '#0E0E14',
+          'dark-blue': '#101825',
+          blue: '#00BFFF',
+          'blue-glow': '#33D6FF',
+          purple: '#9000FF',
+          green: '#50FA7B',
+          'green-glow': '#76FFB5',
+          red: '#FF375F',
+          'red-glow': '#FF6B87',
+          yellow: '#FFCC00',
+          'yellow-glow': '#FFE066',
         }
 			},
 			borderRadius: {
@@ -74,6 +86,11 @@ export default {
         neon: '0 0 5px theme(colors.cyber.primary), 0 0 20px rgba(56, 189, 248, 0.2)',
         neonRed: '0 0 5px theme(colors.cyber.destructive), 0 0 20px rgba(255, 58, 94, 0.2)',
         neonGreen: '0 0 5px theme(colors.cyber.secondary), 0 0 20px rgba(0, 255, 209, 0.2)',
+        'neon-blue': '0 0 5px theme(colors.cyber.blue), 0 0 20px rgba(0, 191, 255, 0.2)',
+        'neon-purple': '0 0 5px theme(colors.cyber.purple), 0 0 20px rgba(144, 0, 255, 0.2)',
+        'neon-green': '0 0 5px theme(colors.cyber.green), 0 0 20px rgba(80, 250, 123, 0.2)',
+        'neon-red': '0 0 5px theme(colors.cyber.red), 0 0 20px rgba(255, 55, 95, 0.2)',
+        'neon-yellow': '0 0 5px theme(colors.cyber.yellow), 0 0 20px rgba(255, 204, 0, 0.2)',
       },
 			keyframes: {
 				'accordion-down': {
@@ -147,6 +164,23 @@ export default {
             opacity: '1',
           },
         },
+        'blink': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0' },
+        },
+        'scanning': {
+          '0%': { transform: 'translateY(0)', opacity: '0.7' },
+          '50%': { transform: 'translateY(100vh)', opacity: '0.3' },
+          '100%': { transform: 'translateY(0)', opacity: '0.7' },
+        },
+        'scan-grid': {
+          '0%': { transform: 'translateY(-100%) rotate(5deg)' },
+          '100%': { transform: 'translateY(1000%) rotate(5deg)' },
+        },
+        'pulse-grid': {
+          '0%, 100%': { opacity: '0.4' },
+          '50%': { opacity: '0.7' },
+        },
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -161,7 +195,15 @@ export default {
         'fade-out': 'fade-out 0.5s ease-out',
         'scale-up': 'scale-up 0.3s ease-out',
         'radar-beam': 'radar-beam 4s linear infinite',
+        'blink': 'blink 1s step-end infinite',
+        'scanning': 'scanning 2s ease-in-out infinite',
+        'scan-grid': 'scan-grid 3s linear infinite',
+        'pulse-grid': 'pulse-grid 4s infinite',
 			},
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'cyber-grid': 'linear-gradient(to right, rgba(0, 191, 255, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 191, 255, 0.05) 1px, transparent 1px)',
+      },
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

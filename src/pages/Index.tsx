@@ -23,14 +23,14 @@ const Index = () => {
           <div className="absolute inset-0 cyber-dots opacity-20 z-0"></div>
           
           <div className="container mx-auto px-4 relative z-10">
-            <div className="max-w-5xl mx-auto bg-cyber-muted rounded-2xl border border-cyber-border p-8 md:p-12 relative overflow-hidden">
+            <div className="max-w-5xl mx-auto glass-card rounded-2xl border border-cyber-blue/20 p-8 md:p-12 relative overflow-hidden">
               {/* Background glow */}
-              <div className="absolute -top-24 -right-24 w-64 h-64 bg-cyber-primary opacity-10 blur-3xl rounded-full"></div>
+              <div className="absolute -top-24 -right-24 w-64 h-64 bg-cyber-blue opacity-10 blur-3xl rounded-full"></div>
               
               <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                 <div className="max-w-xl">
                   <h2 className="text-3xl font-bold mb-4">
-                    Ready to <span className="cyber-text-gradient">Secure</span> Your System?
+                    Ready to <span className="bg-gradient-to-r from-cyber-blue to-cyber-purple bg-clip-text text-transparent">Secure</span> Your System?
                   </h2>
                   <p className="text-cyber-foreground/70 mb-6">
                     Get started with our advanced security solution today and experience the peace of mind 
@@ -38,23 +38,23 @@ const Index = () => {
                   </p>
                   
                   <div className="flex flex-wrap gap-4">
-                    <ButtonGlow animation="pulse" size="lg" className="group">
+                    <ButtonGlow animation="pulse" size="lg" className="neon-button group">
                       <Shield className="mr-2 h-5 w-5" />
                       Get Started
                       <ArrowRight className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
                     </ButtonGlow>
-                    <ButtonGlow variant="outline" size="lg">
+                    <ButtonGlow variant="outline" size="lg" className="neon-button">
                       Learn More
                     </ButtonGlow>
                   </div>
                 </div>
                 
                 <div className="w-56 h-56 relative">
-                  <div className="absolute inset-0 rounded-full border border-cyber-primary animate-pulse opacity-20"></div>
-                  <div className="absolute inset-2 rounded-full border border-cyber-primary animate-pulse opacity-30" style={{animationDelay: '0.2s'}}></div>
-                  <div className="absolute inset-4 rounded-full border border-cyber-primary animate-pulse opacity-40" style={{animationDelay: '0.4s'}}></div>
-                  <div className="w-full h-full rounded-full bg-cyber-primary/10 flex items-center justify-center">
-                    <Shield className="h-16 w-16 text-cyber-primary" />
+                  <div className="absolute inset-0 rounded-full border border-cyber-blue animate-pulse opacity-20"></div>
+                  <div className="absolute inset-2 rounded-full border border-cyber-blue animate-pulse opacity-30" style={{animationDelay: '0.2s'}}></div>
+                  <div className="absolute inset-4 rounded-full border border-cyber-blue animate-pulse opacity-40" style={{animationDelay: '0.4s'}}></div>
+                  <div className="w-full h-full rounded-full bg-cyber-blue/10 flex items-center justify-center">
+                    <Shield className="h-16 w-16 text-cyber-blue" />
                   </div>
                 </div>
               </div>
@@ -67,12 +67,12 @@ const Index = () => {
           </div>
         </section>
         
-        <footer className="bg-cyber-muted py-10 border-t border-cyber-border">
+        <footer className="bg-cyber-dark-blue py-10 border-t border-cyber-blue/20">
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-center">
-              <div className="flex items-center space-x-2 text-cyber-primary font-bold text-xl mb-4 md:mb-0">
+              <div className="flex items-center space-x-2 text-cyber-blue font-bold text-xl mb-4 md:mb-0">
                 <Shield className="h-5 w-5" />
-                <span className="cyber-text-gradient">CyberGlow Sentinel</span>
+                <span className="bg-gradient-to-r from-cyber-blue to-cyber-purple bg-clip-text text-transparent">CyberGlow Sentinel</span>
               </div>
               
               <div className="text-sm text-cyber-foreground/70">
